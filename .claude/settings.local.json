@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:fabricmc.net)",
+      "WebFetch(domain:maven.fabricmc.net)",
+      "WebFetch(domain:www.curseforge.com)",
+      "WebFetch(domain:modrinth.com)",
+      "WebFetch(domain:api.modrinth.com)",
+      "WebFetch(domain:wiki.fabricmc.net)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Read(//mnt/c/Users/musa/IdeaProjects/**)",
+      "Bash(./gradlew build *)",
+      "Bash(jar tf *)",
+      "Bash(cd /tmp)",
+      "Bash(jar xf *)",
+      "Bash(javap -p net/minecraft/client/gui/DrawContext.class)",
+      "Bash(javap -p net/minecraft/client/render/RenderPipelines.class)",
+      "Bash(javap -p net/minecraft/client/gl/RenderPipelines.class)",
+      "Bash(javap -p net/minecraft/client/render/RenderTickCounter.class)",
+      "Bash(javap -p net/minecraft/client/toast/Toast.class)",
+      "Bash(javap -p net/minecraft/client/option/KeyBinding.class)",
+      "Bash(javap -p 'net/minecraft/client/option/KeyBinding$Category.class')",
+      "Bash(javap -p net/minecraft/client/gui/screen/Screen.class)",
+      "Bash(javap -p net/minecraft/client/input/KeyInput.class)",
+      "Bash(javap -p net/minecraft/client/texture/NativeImageBackedTexture.class)",
+      "Bash(javap -p net/fabricmc/fabric/api/event/player/UseItemCallback.class)",
+      "Bash(./gradlew dependencies *)",
+      "Bash(xargs -I{} sh -c 'jar tf \"{}\" 2>/dev/null | grep \"UseItemCallback\" && echo \"{}\"')",
+      "Bash(javap -verbose net/minecraft/client/gui/DrawContext.class)",
+      "Bash(xargs -I{} sh -c 'jar tf \"{}\" 2>/dev/null | grep \"UseItemCallback\" && echo \"FOUND IN: {}\"')",
+      "Bash(mkdir -p /tmp/fabric)",
+      "Read(//tmp/**)",
+      "Bash(mkdir -p /tmp/fabric2)",
+      "Bash(mkdir -p /tmp/fabric3)",
+      "Bash(cat net/fabricmc/fabric/api/event/player/UseItemCallback.java)",
+      "Bash(javap -p net/minecraft/client/gl/PostEffectProcessor.class)",
+      "Bash(javap -p net/minecraft/client/gl/PostEffectPass.class)",
+      "Bash(javap -p net/minecraft/client/gl/ShaderLoader.class)"
+    ]
+  }
+}

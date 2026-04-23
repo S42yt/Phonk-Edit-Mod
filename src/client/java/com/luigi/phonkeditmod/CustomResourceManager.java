@@ -130,26 +130,27 @@ public class CustomResourceManager {
 			
 			for (int i = 0; i < pngFiles.size(); i++) {
 				Path imageFile = pngFiles.get(i);
+				final int imageIndex = i;
 				try {
 					// Cria um Identifier único para esta imagem customizada
-					Identifier imageId = Identifier.of("phonk-edit-mod", "custom_image_" + i);
-					
+					Identifier imageId = Identifier.of("phonk-edit-mod", "custom_image_" + imageIndex);
+
 					// Lê a imagem usando ImageIO (Java)
 					BufferedImage bufferedImage = ImageIO.read(imageFile.toFile());
-					
+
 					if (bufferedImage == null) {
 						System.err.println("[Phonk Edit Mod] Falha ao ler imagem: " + imageFile.getFileName());
 						lastImageErrors++;
 						continue;
 					}
-					
+
 					// Converte para NativeImage (Minecraft)
 					NativeImage nativeImage = convertToNativeImage(bufferedImage);
-					
+
 					// Registra a textura no TextureManager do Minecraft
 					client.getTextureManager().registerTexture(
 							imageId,
-							new NativeImageBackedTexture(nativeImage)
+							new NativeImageBackedTexture(() -> "phonk-edit-mod:custom_image_" + imageIndex, nativeImage)
 					);
 					
 					customImages.add(imageId);

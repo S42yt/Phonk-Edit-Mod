@@ -11,17 +11,15 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.ActionResult;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.render.*;
-import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -30,9 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-// SATIN API
-import org.ladysnake.satin.api.managed.ManagedShaderEffect;
-import org.ladysnake.satin.api.managed.ShaderEffectManager;
 
 public class PhonkEditModClient implements ClientModInitializer {
 
@@ -119,13 +114,6 @@ public class PhonkEditModClient implements ClientModInitializer {
 	private static float beatProgress = 0.0f; // Progresso dentro da batida atual (0.0 a 1.0)
 	private static int ticksPerBeat = 10; // Ticks por batida (baseado no pitch)
 	
-	// SHADER SATIN
-	private static final ManagedShaderEffect GRAYSCALE_SHADER = ShaderEffectManager.getInstance()
-			.manage(Identifier.of("phonk-edit-mod", "shaders/post/grayscale.json"));
-	private static final ManagedShaderEffect RADIAL_BLUR_SHADER = ShaderEffectManager.getInstance()
-			.manage(Identifier.of("phonk-edit-mod", "shaders/post/radial_blur.json"));
-	private static final ManagedShaderEffect PASSTHROUGH_SHADER = ShaderEffectManager.getInstance()
-			.manage(Identifier.of("phonk-edit-mod", "shaders/post/blit.json"));
 
 	@Override
 	public void onInitializeClient() {
@@ -142,13 +130,15 @@ public class PhonkEditModClient implements ClientModInitializer {
 		CustomResourceManager.initDirectories();
 		// NOTA: Os recursos customizados serão carregados no primeiro tick do jogo,
 		// quando o contexto OpenGL já estiver pronto
-		
+
+		KeyBinding.Category phonk_keybinding_category = new KeyBinding.Category(Identifier.of("phonk-edit-mod", "category"));
+
 		// 1. Registra keybinding para abrir menu (tecla O)
 		configKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 				"key.phonk-edit-mod.config",
 				InputUtil.Type.KEYSYM,
 				GLFW.GLFW_KEY_O,
-				"category.phonk-edit-mod"
+				phonk_keybinding_category
 		));
 		
 		// 2. Registra o "Ouvinte" do Timer (Tick)
@@ -419,23 +409,8 @@ public class PhonkEditModClient implements ClientModInitializer {
 			float shakeX = (float) (Math.random() - 0.5) * shakeIntensity * 10.0f;
 			float shakeY = (float) (Math.random() - 0.5) * shakeIntensity * 10.0f;
 			
-			drawContext.getMatrices().push();
-			drawContext.getMatrices().translate(shakeX, shakeY, 0);
-		}
-		
-		// SEMPRE aplica shader grayscale para corrigir ordem de renderização
-		// Intensidade 0.0 = invisível (colorido), 1.0 = preto e branco
-		if (config.habilitarBarrasPretas || config.habilitarGrayscale) {
-			float grayscaleIntensity = config.habilitarGrayscale ? 1.0f : 0.0f;
-			GRAYSCALE_SHADER.setUniformValue("Intensity", grayscaleIntensity);
-			GRAYSCALE_SHADER.render(tickCounter.getTickDelta(false));
-		}
-		
-		// Aplica blur radial se intensidade > 0 E SE HABILITADO
-		if (config.habilitarBlur && blurIntensity > 0.01f) {
-			// Atualiza uniform do shader com intensidade atual
-			RADIAL_BLUR_SHADER.setUniformValue("BlurIntensity", blurIntensity);
-			RADIAL_BLUR_SHADER.render(tickCounter.getTickDelta(false));
+			drawContext.getMatrices().pushMatrix();
+			drawContext.getMatrices().translate(shakeX, shakeY);
 		}
 		
 		// Desenha o texto chamativo no topo SE HABILITADO
@@ -463,10 +438,11 @@ public class PhonkEditModClient implements ClientModInitializer {
 			int y = y_center_point - (renderSize / 2);
 
 			drawContext.drawTexture(
+					RenderPipelines.GUI_TEXTURED,
 					imagemMemeAtual,
 					x, y,
+					0f, 0f,
 					renderSize, renderSize,
-					0, 0,
 					MEME_TEXTURE_SIZE, MEME_TEXTURE_SIZE,
 					MEME_TEXTURE_SIZE, MEME_TEXTURE_SIZE
 			);
@@ -474,7 +450,7 @@ public class PhonkEditModClient implements ClientModInitializer {
 		
 		// Restaura a matriz (pop) se aplicamos shake
 		if (config.habilitarShake && applyCameraEffects && shakeIntensity > 0) {
-			drawContext.getMatrices().pop();
+			drawContext.getMatrices().popMatrix();
 		}
 		
 		// Desenha barras pretas POR ÚLTIMO (depois de tudo, incluindo shaders) SE HABILITADO
@@ -528,7 +504,7 @@ public class PhonkEditModClient implements ClientModInitializer {
 			if (config.habilitarTriggerUsarItem) {
 				tentarAtivarMemePorAcaoComDelay();
 			}
-			return net.minecraft.util.TypedActionResult.pass(player.getStackInHand(hand));
+			return ActionResult.PASS;
 		});
 	}
 	

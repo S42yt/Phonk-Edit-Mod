@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.text.Text;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
@@ -26,6 +27,13 @@ public class ConfigScreen extends Screen {
 		super(Text.literal("Phonk Edit Mod - Settings"));
 		this.parent = parent;
 		this.config = config;
+	}
+
+	// Overridden to skip applyBlur() — in 1.21.11 blur is already called once by
+	// MinecraftClient.setScreen() in the same frame, so a second call crashes.
+	@Override
+	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+		context.fill(0, 0, this.width, this.height, 0xC0101010);
 	}
 
 	@Override
@@ -522,15 +530,15 @@ public class ConfigScreen extends Screen {
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		if (keyCode == GLFW.GLFW_KEY_UP) {
+	public boolean keyPressed(KeyInput input) {
+		if (input.key() == GLFW.GLFW_KEY_UP) {
 			mouseScrolled(0, 0, 0, 1);
 			return true;
-		} else if (keyCode == GLFW.GLFW_KEY_DOWN) {
+		} else if (input.key() == GLFW.GLFW_KEY_DOWN) {
 			mouseScrolled(0, 0, 0, -1);
 			return true;
 		}
-		return super.keyPressed(keyCode, scanCode, modifiers);
+		return super.keyPressed(input);
 	}
 
 	@Override

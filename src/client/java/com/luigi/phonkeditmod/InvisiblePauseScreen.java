@@ -20,6 +20,13 @@ public class InvisiblePauseScreen extends Screen {
         // Vazio de propósito
     }
 
+    // Impede o blur de background que o Screen aplica automaticamente.
+    // Em 1.21.11 há um guard "once per frame" — sem este override o jogo crasha.
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Vazio de propósito
+    }
+
     // Impede que o 'Esc' feche a tela (nós controlamos quando ela fecha)
     @Override
     public boolean shouldCloseOnEsc() {
