@@ -36,7 +36,17 @@
       "Bash(cat net/fabricmc/fabric/api/event/player/UseItemCallback.java)",
       "Bash(javap -p net/minecraft/client/gl/PostEffectProcessor.class)",
       "Bash(javap -p net/minecraft/client/gl/PostEffectPass.class)",
-      "Bash(javap -p net/minecraft/client/gl/ShaderLoader.class)"
+      "Bash(javap -p net/minecraft/client/gl/ShaderLoader.class)",
+      "Bash(mkdir -p /tmp/mc_shaders)",
+      "Bash(javap -p -c \"net/minecraft/client/render/GameRenderer.class\")",
+      "Bash(javap -p -verbose \"net/minecraft/client/render/GameRenderer.class\")",
+      "Bash(awk '/public void render\\\\\\(net.minecraft.client.render.RenderTickCounter, boolean\\\\\\)/,/^  public/')",
+      "Bash(grep -E \"invoke|getfield|Field|//|postProcess|framebuffer|draw|gui|hud|screen\")",
+      "Bash(awk '/public void renderWorld/,/^  public/')",
+      "Bash(grep -E \"invoke|getfield|Field|//\")",
+      "Bash(awk '/public void render\\\\\\(net\\\\.minecraft\\\\.client\\\\.render\\\\.RenderTickCounter, boolean\\\\\\)/,/^  public [a-zA-Z]/')",
+      "Bash(grep -n \"invoke\\\\|getfield\\\\|//.*Method\\\\|//.*Field\")",
+      "Bash(grep -E \"[0-9]+:|//.*Method|//.*Field|//.*Class|//.*String\")"
     ]
   }
 }

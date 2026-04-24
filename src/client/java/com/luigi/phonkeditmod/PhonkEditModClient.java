@@ -1,5 +1,6 @@
 package com.luigi.phonkeditmod;
 
+import com.luigi.phonkeditmod.mixin.GameRendererAccessor;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -108,6 +109,7 @@ public class PhonkEditModClient implements ClientModInitializer {
 	private static float shakeIntensity = 0.0f;
 	private static float blurIntensity = 0.0f; // Intensidade do blur radial (0.0 a 1.0)
 	private static float effectProgress = 0.0f; // Progresso do efeito (0.0 a 1.0)
+	private static Identifier activeShaderEffect = null; // Shader de post-processing ativo
 	
 	// Sistema de batidas (beats)
 	private static float currentPitch = 1.0f; // Pitch atual da música
@@ -283,14 +285,14 @@ public class PhonkEditModClient implements ClientModInitializer {
 				// Shake constante com picos nas batidas SE HABILITADO
 				if (config.habilitarShake) {
 					// Shake base + extra na batida
-					float baseShake = 0.15f;
-					float beatShake = beatIntensity * 0.25f;
-					
+					float baseShake = 0.06f;
+					float beatShake = beatIntensity * 0.1f;
+
 					// Intensifica no final (últimos 10%)
 					if (effectProgress > 0.9f) {
 						float finalIntensity = (effectProgress - 0.9f) * 10.0f; // 0.0 a 1.0
-						baseShake += finalIntensity * 0.3f; // Até +0.3
-						beatShake += finalIntensity * 0.2f; // Mais violento
+						baseShake += finalIntensity * 0.1f; // Até +0.1
+						beatShake += finalIntensity * 0.08f; // Mais violento
 					}
 					
 					shakeIntensity = (baseShake + beatShake) * config.intensidadeShake;
@@ -365,9 +367,24 @@ public class PhonkEditModClient implements ClientModInitializer {
 		applyCameraEffects = true;
 		currentZoom = 1.0f;
 		targetZoom = 1.0f;
-		shakeIntensity = 0.15f;
+		shakeIntensity = 0.06f;
 		blurIntensity = 0.0f;
 		beatProgress = 0.0f;
+
+		// 6. Ativa efeitos de shader:
+		// - Blur via setPostProcessor (aplicado ao mundo ANTES do HUD/skull)
+		// - Grayscale via mixin injection (aplicado a tudo DEPOIS do HUD, inclusive skull)
+		try {
+			if (config.habilitarBlur) {
+				((GameRendererAccessor) client.gameRenderer).callSetPostProcessor(
+						Identifier.of("phonk-edit-mod", "radial_blur"));
+			}
+		} catch (Exception e) {
+			System.err.println("[Phonk Edit Mod] Erro ao ativar blur: " + e.getMessage());
+		}
+		activeShaderEffect = config.habilitarGrayscale
+				? Identifier.of("phonk-edit-mod", "grayscale")
+				: null;
 	}
 
 	private void pararMeme(MinecraftClient client) {
@@ -394,6 +411,14 @@ public class PhonkEditModClient implements ClientModInitializer {
 		effectProgress = 0.0f;
 		beatProgress = 0.0f;
 		currentPitch = 1.0f;
+
+		// 4. Limpa os shaders de post processing
+		activeShaderEffect = null;
+		try {
+			client.gameRenderer.clearPostProcessor();
+		} catch (Exception e) {
+			System.err.println("[Phonk Edit Mod] Erro ao desativar blur: " + e.getMessage());
+		}
 	}
 
 	private void registerHudRenderer() {
@@ -406,8 +431,8 @@ public class PhonkEditModClient implements ClientModInitializer {
 			
 		// Aplica efeito de shake em TODA a tela (incluindo HUD) SE HABILITADO
 		if (config.habilitarShake && applyCameraEffects && shakeIntensity > 0) {
-			float shakeX = (float) (Math.random() - 0.5) * shakeIntensity * 10.0f;
-			float shakeY = (float) (Math.random() - 0.5) * shakeIntensity * 10.0f;
+			float shakeX = (float) (Math.random() - 0.5) * shakeIntensity * 4.0f;
+			float shakeY = (float) (Math.random() - 0.5) * shakeIntensity * 4.0f;
 			
 			drawContext.getMatrices().pushMatrix();
 			drawContext.getMatrices().translate(shakeX, shakeY);
@@ -553,6 +578,10 @@ public class PhonkEditModClient implements ClientModInitializer {
 	
 	public static float getEffectProgress() {
 		return effectProgress;
+	}
+
+	public static Identifier getActiveShaderEffect() {
+		return activeShaderEffect;
 	}
 	
 	// Método público para reiniciar o timer (chamado quando configs de tempo mudam)
